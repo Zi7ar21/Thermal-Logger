@@ -121,11 +121,18 @@ int main(int argc, char** argv) {
 
 	timespec ts; // timestamp of the temperature measurement
 
+	clock_gettime(CLOCK_REALTIME, &ts);
+
 	char tstr[16];
 	int temp;
 
 	// logger loop
 	for(int i = 0; i < 10; i++) {
+		ts.tv_sec += (time_t)1;
+		ts.tv_nsec = (long)0;
+
+		clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
 		// reload the file (so the measurement can be updated)
 		//freopen(temp_filename, "rb", temp_file);
 		rewind(temp_file);
