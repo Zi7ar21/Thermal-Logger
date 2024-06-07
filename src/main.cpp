@@ -81,6 +81,8 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
+	setvbuf(log_file, NULL, _IOFBF, (size_t)262144u); // increase buffer size
+
 	fprintf(log_file, "Time,%s", thermal_zone_type);
 
 	fflush(log_file);
