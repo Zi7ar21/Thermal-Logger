@@ -121,25 +121,28 @@ int main(int argc, char** argv) {
 
 	timespec ts; // timestamp of the temperature measurement
 
-	int temp; // temperature
+	char tstr[16];
+	int temp;
 
 	// logger loop
 	for(int i = 0; i < 10; i++) {
-		// open the thermal_zone sysfs temperature file
-		//fflush(temp_file);
-		freopen(temp_filename, "rb", temp_file);
+		// reload the file (so the measurement can be updated)
+		//freopen(temp_filename, "rb", temp_file);
+		rewind(temp_file);
 
 		// it's likely the time of the temperature measurement is closer to AFTER temp_file has been opened
 		clock_gettime(CLOCK_REALTIME, &ts);
 
-		fscanf(temp_file, "%d", &temp); // read the temperature from the file
+		//fscanf(temp_file, "%d", &temp); // read the temperature from the file
+		fread(tstr, sizeof(char), (size_t)5, temp_file); // VERY UNSAFE (but also very fast)
+
+		temp = atoi(tstr);
 
 		// log the time and temperature
-		fprintf(log_file, "%lld.%09lld,%d\n",(long long int)ts.tv_sec, (long long int)ts.tv_nsec,temp);
-
-		// close the file (so the measurement can be updated)
-		//fclose(temp_file);
+		fprintf(log_file, "%lld.%09lld,%d\n", (long long int)ts.tv_sec, (long long int)ts.tv_nsec, temp);
 	}
+
+	fclose(temp_file);
 
 	fclose(log_file);
 
