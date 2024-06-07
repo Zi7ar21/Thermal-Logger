@@ -128,8 +128,16 @@ int main(int argc, char** argv) {
 
 	// logger loop
 	for(int i = 0; i < 10; i++) {
-		ts.tv_sec += (time_t)1;
-		ts.tv_nsec = (long)0;
+		//ts.tv_sec += (time_t)1;
+
+		// 1 centisecond from now
+		ts.tv_nsec = 100000000l*((ts.tv_nsec/100000000l)+1l);
+
+		// fix rounding
+		if(ts.tv_nsec >= 1000000000l) {
+			ts.tv_sec += 1l;
+			ts.tv_nsec = 0l;
+		}
 
 		clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 
