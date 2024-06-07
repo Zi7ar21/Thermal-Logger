@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 	}
 
 	// filename of the thermal_zone
-	const char* thermal_zone = "/sys/class/thermal/thermal_zone0";
+	const char* thermal_zone = "/sys/class/thermal/thermal_zone74";
 
 	char* thermal_zone_type; // thermal_zone type string
 
@@ -92,9 +92,10 @@ int main(int argc, char** argv) {
 	// allocate enough memory for temp_filename
 	char* temp_filename = (char*)malloc(sizeof(char)*FILENAME_MAX);
 
-	// check if temp_filename was opened
+	// check if type_filename was allocated
 	if(temp_filename == NULL) {
-		perror("Error");
+		fprintf(stderr, "Error: Failed to allocate memory for type_filename");
+		perror("");
 
 		fclose(log_file);
 
@@ -104,7 +105,19 @@ int main(int argc, char** argv) {
 	// we anticipate the temp to be located at /sys/class/thermal/thermal_zoneX/temp
 	snprintf(temp_filename, FILENAME_MAX-strlen(thermal_zone), "%s/temp", thermal_zone);
 
-	FILE* temp_file;
+	// thermal_zone sysfs temperature file
+	FILE* temp_file = fopen(temp_filename, "rb");
+
+	// check if temp_file was opened
+	if(temp_file == NULL) {
+		fprintf(stderr, "Error: Failed to open temp_file (%s)", temp_filename);
+		perror("");
+
+		fclose(log_file);
+		free(temp_filename);
+
+		return EXIT_FAILURE;
+	}
 
 	timespec ts; // timestamp of the temperature measurement
 
@@ -113,7 +126,8 @@ int main(int argc, char** argv) {
 	// logger loop
 	for(int i = 0; i < 10; i++) {
 		// open the thermal_zone sysfs temperature file
-		temp_file = fopen(temp_filename, "rb");
+		//fflush(temp_file);
+		freopen(temp_filename, "rb", temp_file);
 
 		// it's likely the time of the temperature measurement is closer to AFTER temp_file has been opened
 		clock_gettime(CLOCK_REALTIME, &ts);
@@ -124,7 +138,7 @@ int main(int argc, char** argv) {
 		fprintf(log_file, "%lld.%09lld,%d\n",(long long int)ts.tv_sec, (long long int)ts.tv_nsec,temp);
 
 		// close the file (so the measurement can be updated)
-		fclose(temp_file);
+		//fclose(temp_file);
 	}
 
 	fclose(log_file);
